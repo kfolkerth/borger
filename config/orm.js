@@ -5,47 +5,75 @@ var orm = {
 
     //Selects all burgers from burger_db
     selectAll: function (callback) {
-        connection.connect();
         connection.query(
             'SELECT * FROM burgers',
             function (err, results) {
                 if (err) throw err;
-                connection.end();
                 return callback(results);
             }
         )
     },
 
     //adds new burger to db with a default state of not being devoured
-    insertOne: function (newBurger) {
-        connection.connect();
+    insertOne: function (newBurger, callback) {
         connection.query(
             "INSERT INTO burgers(burger_name, devoured) VALUES('" + newBurger + "', 0)",
             function (err, results) {
                 if (err) throw err;
                 console.log('1 burger inserted');
-                connection.end();
+                return callback(true);
             }
         )
     },
 
     //uodates the devoured state of a burger
-    updateOne: function (updatedBurger, newState) {
-        connection.connect();
+    updateOne: function (burgerID, callback) {
+        console.log(burgerID);
         connection.query(
-            'UPDATE burgers SET ? WHERE ?',
+            'SELECT * FROM burgers WHERE ?',
             {
-                devoured: newState
+                id: burgerID
             },
-            {
-                burger_name: updatedBurger
-            },
-            function (err, result) {
-                if (err) throw err;
-                console.log('1 rows updated');
-                connection.end();
+            function (err, results) {
+                console.log(results);
+                if (results[0].devoured == 0) {
+                    connection.query(
+                        'UPDATE burgers SET ? WHERE ?',
+                        [
+                            {
+                                devoured: 1
+                            },
+                            {
+                                id: burgerID
+                            }
+                        ],
+                        function (err, result) {
+                            if (err) throw err;
+                            console.log('1 rows updated');
+                            return callback(true);
+                        }
+                    );
+                } else {
+                    connection.query(
+                        'UPDATE burgers SET ? WHERE ?',
+                        [
+                            {
+                                devoured: 0
+                            },
+                            {
+                                id: burgerID
+                            }
+                        ],
+                        function (err, result) {
+                            if (err) throw err;
+                            console.log('1 rows updated');
+                            return callback(true);
+                        }
+                    );
+                }
             }
         )
+
     }
 }
 
